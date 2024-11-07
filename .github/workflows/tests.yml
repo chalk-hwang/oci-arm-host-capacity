@@ -29,8 +29,7 @@ jobs:
 
       - name: Get Composer Cache Directory
         id: composer-cache
-        run: |
-          echo "::set-output name=dir::$(composer config cache-files-dir)"
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
       - uses: actions/cache@v2
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
@@ -42,8 +41,8 @@ jobs:
         run: |
           composer update --prefer-dist --no-progress
       - name: Run script
-        run: |
-          php index.php
+        id: run-script
+        run: echo "result=$(php index.php)" >> $GITHUB_OUTPUT
         env:
           OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -58,9 +57,14 @@ jobs:
           OCI_SHAPE: ${{ secrets.OCI_SHAPE }}
           OCI_MAX_INSTANCES: ${{ secrets.OCI_MAX_INSTANCES }}
           OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
-          TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_USER_ID }}
-          TELEGRAM_BOT_API_KEY: ${{ secrets.TELEGRAM_BOT_API_KEY }}
-          # AD_ALWAYS_FREE: ${{ secrets.AD_ALWAYS_FREE }}
-          # TEST_IMAGE_ID: ${{ secrets.TEST_IMAGE_ID }}
-          # TEST_SUBNET_ID: ${{ secrets.TEST_SUBNET_ID }}
+      - name: send telegram message on push
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_USER_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_API_KEY }}
+          message: |
+            *${{ github.repository }}*
 
+            ${{ steps.run-script.outputs.result }}
+            
+            ${{ github.workflow }}
