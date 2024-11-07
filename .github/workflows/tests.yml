@@ -42,7 +42,7 @@ jobs:
           composer update --prefer-dist --no-progress
       - name: Run script
         id: run-script
-        run: echo "result=$(php index.php)" >> $GITHUB_OUTPUT
+        run: php index.php >> $GITHUB_OUTPUT
         env:
           OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
@@ -65,6 +65,7 @@ jobs:
           message: |
             *${{ github.repository }}*
 
-            ${{ steps.run-script.outputs.result }}
-            
+            ${{ steps.run-script.outputs.code }}
+            ${{ steps.run-script.outputs.message }}
+
             ${{ github.workflow }}
